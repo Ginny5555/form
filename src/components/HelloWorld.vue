@@ -1,58 +1,129 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+  <div class="form">
+    <CustomInput
+      label="Firstname"
+      @input="handleInput"
+      placeholder="firstname"
+      v-model="form.firstname"
+      type="text"
+      :error="isFirstNameInvalid()"
+    />
+    <CustomInput
+      label="Lastname"
+      placeholder="lastname"
+      @input="handleInput"
+      v-model="form.lastname"
+      type="text"
+      :error="isLastNameInvalid()"
+    />
+
+    <CustomRange
+      type="range"
+      :min="20"
+      :max="100"
+      :step="5"
+      @input="logCoverageValue"
+      v-model="form.coverage"
+    />
+    <p>{{form.coverage}}</p>
+    <p
+      v-show="isFormInvalid()"
+      :class="{warning:isFormInvalid(), hidden:!isFormInvalid()}"
+    >must be less 5 characters and longer than 2</p>
+    <CustomButton @click="submitForm" :disabled="isFormInvalid()" />
   </div>
 </template>
 
 <script>
+// validation rules: firstname - max (5 symbols), min (2), lastname - max (5), min (2)
+/*
+ * vue-3 emits modelValue
+ * custom components (Range, Button, Input)
+ * console.log form data after validation and submit
+ *
+ * */
+import CustomButton from "@/components/ui/CustomButton.vue";
+import CustomInput from "@/components/ui/CustomInput.vue";
+import CustomRange from "@/components/ui/CustomRange.vue";
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
-}
+  components: {
+    CustomButton,
+    CustomInput,
+    CustomRange
+  },
+  data() {
+    return {
+      form: {
+        firstname: "",
+        lastname: "",
+        coverage: 20 //Range [from 0 to 20]
+      },
+
+    };
+  },
+
+  methods: {
+    isFirstNameInvalid() {
+      return this.form.firstname.length < 2 || this.form.firstname.length > 5;
+    },
+
+    isLastNameInvalid() {
+      return this.form.lastname.length < 2 || this.form.lastname.length > 5;
+    },
+
+    isFormInvalid() {
+      return this.isFirstNameInvalid() || this.isLastNameInvalid();
+    },
+    logCoverageValue() {
+      this.form.coverage = parseInt(event.target.value);
+    },
+    handleInput(event) {
+      const inputField = event.target;
+      const maxLength = parseInt(inputField.getAttribute("maxlength"));
+
+      if (maxLength && inputField.value.length > maxLength) {
+        inputField.value = inputField.value.slice(0, maxLength);
+      }
+
+      // Remove non-letter characters from the input value
+      inputField.value = inputField.value.replace(/[^a-zA-Z]/g, "");
+
+      // Update the form data
+    },
+    submitForm() {
+      if (this.isFormInvalid()) {
+        console.log("Form data is invalid.");
+        return;
+      }
+
+      console.log("Form data submitted:", this.form);
+
+      this.form = {
+        firstname: "",
+        lastname: "",
+        coverage: ""
+      };
+    }
+  },
+
+};
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-h3 {
-  margin: 40px 0 0;
+<style lang="scss" scoped>
+.form {
+  display: flex;
+  width: 200px;
+  flex-direction: column;
+  margin: 0 auto;
+  height: 150px;
+  justify-content: space-between;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+.warning {
+  font-size: 10px;
+  color: red;
+  display: block;
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
+.hidden {
+  display: none;
 }
 </style>
